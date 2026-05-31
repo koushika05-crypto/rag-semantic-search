@@ -4,14 +4,19 @@ from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
-import ollama
+from groq import Groq
+import os
+from dotenv import load_dotenv
 import fitz
+
+load_dotenv()
+groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -56,18 +61,15 @@ Question: {q.question}
 
 Direct answer:"""
 
-    response = ollama.chat(
-        model='llama3.2',
+    response = groq_client.chat.completions.create(
+        model="llama-3.2-3b-preview",
         messages=[{"role": "user", "content": prompt}],
-        options={
-            "num_predict": 300,
-            "temperature": 0.1,
-            "top_k": 10,
-        }
+        max_tokens=300,
+        temperature=0.1,
     )
 
     return {
-        "answer": response['message']['content'],
+        "answer": response.choices[0].message.content,
         "sources": chunks[:3]
     }
 
@@ -116,7 +118,7 @@ async def upload(file: UploadFile = File(...)):
             index.add(np.array(embeddings))
             documents.extend(chunks)
 
-        # Generate smart summary
+        # Generate smart summary using Groq
         summary_text = full_text[:3000]
         summary_prompt = f"""Read this document carefully and write a clear 2-3 sentence summary.
 State: what type of document it is, who it belongs to, and the key highlights.
@@ -127,16 +129,17 @@ Document text:
 
 Summary:"""
 
-        summary_response = ollama.chat(
-            model='llama3.2',
+        summary_response = groq_client.chat.completions.create(
+            model="llama-3.2-3b-preview",
             messages=[{"role": "user", "content": summary_prompt}],
-            options={"num_predict": 200, "temperature": 0.1}
+            max_tokens=200,
+            temperature=0.1,
         )
 
         return {
             "message": f"Uploaded! Added {len(chunks)} chunks to the knowledge base.",
             "chunks": len(chunks),
-            "summary": summary_response['message']['content']
+            "summary": summary_response.choices[0].message.content
         }
 
     except Exception as e:
