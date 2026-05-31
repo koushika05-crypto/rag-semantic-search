@@ -12,6 +12,8 @@ import fitz
 load_dotenv()
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
+GROQ_MODEL = "llama-3.3-70b-versatile"
+
 app = FastAPI()
 
 app.add_middleware(
@@ -34,13 +36,10 @@ def ask(q: Question):
     if index.ntotal == 0:
         return {"answer": "Please upload a document first!", "sources": []}
 
-    # Search top 5 most relevant chunks
     query_vec = model.encode([q.question])
     distances, indices_result = index.search(np.array(query_vec), k=5)
     chunks = [documents[i] for i in indices_result[0] if i < len(documents)]
     context = "\n".join(chunks)
-
-    # Use first 2000 chars of full document for extra context
     extra_context = full_document_text[:2000] if full_document_text else ""
 
     prompt = f"""You are a helpful document assistant. Answer the question using ONLY the document content below.
@@ -62,7 +61,7 @@ Question: {q.question}
 Direct answer:"""
 
     response = groq_client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model=GROQ_MODEL,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=300,
         temperature=0.1,
@@ -106,10 +105,7 @@ async def upload(file: UploadFile = File(...)):
             if len(current_chunk) > 30:
                 chunks.append(current_chunk.strip())
 
-        # Store full text globally
         full_document_text = full_text
-
-        # Reset index and documents for new upload
         index = faiss.IndexFlatL2(384)
         documents = []
 
@@ -118,7 +114,6 @@ async def upload(file: UploadFile = File(...)):
             index.add(np.array(embeddings))
             documents.extend(chunks)
 
-        # Generate smart summary using Groq
         summary_text = full_text[:3000]
         summary_prompt = f"""Read this document carefully and write a clear 2-3 sentence summary.
 State: what type of document it is, who it belongs to, and the key highlights.
@@ -130,7 +125,7 @@ Document text:
 Summary:"""
 
         summary_response = groq_client.chat.completions.create(
-            model="llama-3.2-3b-preview",
+            model=GROQ_MODEL,
             messages=[{"role": "user", "content": summary_prompt}],
             max_tokens=200,
             temperature=0.1,
