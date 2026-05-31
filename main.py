@@ -62,7 +62,7 @@ Question: {q.question}
 Direct answer:"""
 
     response = groq_client.chat.completions.create(
-        model="llama-3.2-3b-preview",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=300,
         temperature=0.1,
