@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sentence-transformers
+faiss-cpu
+pymupdf
+groq
+python-multipart
+scikit-learn
+python-dotenv
+numpy
