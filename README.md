@@ -8,7 +8,9 @@
 ██████╔╝╚██████╔╝╚██████╗██║ ╚═╝ ██║██║██║ ╚████║██████╔╝
 ╚═════╝  ╚═════╝  ╚═════╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚═════╝ 
 ```
-
+🌐 Live App  → https://rag-frontend-pi-opal.vercel.app
+⚙️ Backend   → https://rag-semantic-search-production.up.railway.app
+📂 GitHub    → https://github.com/koushika05-crypto/rag-semantic-search
 ### 🧠 AI-Powered Document Assistant — Chat with your PDFs
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
